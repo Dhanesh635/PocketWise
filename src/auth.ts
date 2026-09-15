@@ -16,11 +16,20 @@ export function isGoogleAuthConfigured(): boolean {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 }
 
+function logAuthConfigurationError(message: string): void {
+  if (process.env.NODE_ENV === "production") {
+    console.error(`[Auth Configuration Error]: ${message}`);
+  }
+}
+
 function getGoogleProvider() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
+    logAuthConfigurationError(
+      "Google OAuth is disabled because GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing.",
+    );
     return [];
   }
 
@@ -107,6 +116,14 @@ export const {
       }
 
       return session;
+    },
+  },
+  logger: {
+    error(error) {
+      console.error("[Auth.js Error]:", error);
+    },
+    warn(code) {
+      console.warn("[Auth.js Warning]:", code);
     },
   },
 });
