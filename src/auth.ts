@@ -16,6 +16,22 @@ export function isGoogleAuthConfigured(): boolean {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 }
 
+function getGoogleProvider() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    return [];
+  }
+
+  return [
+    GoogleProvider({
+      clientId,
+      clientSecret,
+    }),
+  ];
+}
+
 export const {
   handlers: { GET, POST },
   auth,
@@ -29,11 +45,9 @@ export const {
   pages: {
     signIn: "/login",
   },
+  trustHost: true,
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    ...getGoogleProvider(),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
