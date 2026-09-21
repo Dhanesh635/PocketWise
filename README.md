@@ -1,105 +1,157 @@
 # Pocketwise
 
-Pocketwise is a clean personal finance and robo-advisory dashboard built with Next.js App Router, Auth.js, Prisma, PostgreSQL, Tailwind CSS, and server-side AI orchestration.
+Pocketwise is a full-stack personal finance and robo-advisory platform for tracking day-to-day cash flow, maintaining a personal balance sheet, and building diversified mutual fund SIP recommendations.
 
-The app separates daily cash flow from long-term wealth state:
+Built with Next.js App Router, Auth.js, Prisma, PostgreSQL, and Google Gemini, the application keeps transactional spending separate from long-term wealth so each metric remains clear and useful.
 
-- Daily income and expenses are tracked through the dashboard quick-add flow.
-- Assets, liabilities, risk comfort, and baseline budgets are managed from the financial profile.
-- The investment wizard builds a diversified mutual fund SIP recommendation from a curated fund universe, live MFapi NAV data, and Gemini.
+## Highlights
+
+- Secure email/password and Google OAuth authentication
+- Guided onboarding for income, expenses, savings, and liabilities
+- Monthly "Left to Spend" budget with real-time progress
+- Weekly expense trends and transaction management
+- Dedicated financial profile and balance sheet
+- Live Indian mutual fund NAV data from MFapi.in
+- Gemini-powered Core & Satellite SIP recommendations
+- Deterministic recommendations when an external service is unavailable
+- Strict tenant isolation across all user-owned records
+
+## Product Tour
+
+### Authentication and onboarding
+
+New users can create an account with email and password or continue with Google. The onboarding flow captures the financial baseline used throughout the dashboard.
+
+<table>
+  <tr>
+    <td width="42%" align="center">
+      <img src="image.png" alt="Pocketwise login screen" width="360" />
+      <br />
+      <sub><strong>Secure sign-in</strong></sub>
+    </td>
+    <td width="58%" align="center">
+      <img src="image-1.png" alt="Pocketwise financial baseline onboarding form" width="520" />
+      <br />
+      <sub><strong>Financial baseline setup</strong></sub>
+    </td>
+  </tr>
+</table>
+
+### Money overview
+
+The dashboard brings the monthly budget, net worth, spending insight, weekly activity, and recent transactions into one responsive workspace.
+
+<p align="center">
+  <img src="image-2.png" alt="Pocketwise money overview dashboard" width="900" />
+  <br />
+  <sub><strong>Dashboard with budget, net worth, insights, and transaction activity</strong></sub>
+</p>
+
+### Robo-advisory journey
+
+The advisory wizard combines the user's risk comfort and investment horizon with a curated mutual fund universe, live NAV data, and strict diversification rules.
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="image-3.png" alt="Pocketwise investment risk selection" width="460" />
+      <br />
+      <sub><strong>1. Select risk comfort</strong></sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="image-4.png" alt="Pocketwise investment horizon selection" width="460" />
+      <br />
+      <sub><strong>2. Choose an investment horizon</strong></sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="image-5.png" alt="Pocketwise personalized SIP recommendation" width="620" />
+  <br />
+  <sub><strong>3. Review the personalized Core &amp; Satellite SIP allocation</strong></sub>
+</p>
+
+> **Disclaimer:** Pocketwise provides a conceptual portfolio recommendation for demonstration purposes. It does not provide financial advice.
 
 ## Tech Stack
 
-- Next.js 16 App Router
-- React 19
-- TypeScript
-- Tailwind CSS
-- Auth.js / NextAuth v5
-- Prisma ORM
-- PostgreSQL
-- Recharts
-- Zod
-- Decimal.js
-- Gemini for portfolio recommendations and dashboard insight text
-- MFapi.in for Indian mutual fund NAV data
+| Area | Technology |
+| --- | --- |
+| Application | Next.js 16, React 19, TypeScript |
+| Styling | Tailwind CSS, Lucide React |
+| Authentication | Auth.js v5, Prisma Adapter, bcryptjs |
+| Data | PostgreSQL, Prisma ORM, Decimal.js |
+| Validation | Zod |
+| Charts | Recharts |
+| AI | Google Gemini |
+| Market data | MFapi.in |
+| Deployment | Vercel, Neon Postgres |
 
-## Core Features
-
-- Email/password authentication with bcrypt
-- Optional Google OAuth provider
-- Onboarding gate for baseline setup
-- Dashboard with:
-  - Left to Spend budget card
-  - Net worth summary
-  - AI insight card
-  - Weekly spending chart
-  - Latest transaction list with delete support
-- Cash-flow-only quick add modal
-- Financial profile page for:
-  - Age
-  - Risk comfort
-  - Investment horizon
-  - Fixed monthly income and expenses
-  - Assets and liabilities
-- Robo-advisory wizard with:
-  - Risk and horizon selection
-  - Curated fund basket
-  - Live NAV hydration from MFapi
-  - Gemini Core & Satellite SIP allocation
-  - Deterministic fallback recommendations
-
-## Project Structure
+## Architecture
 
 ```text
 src/
-  actions/                  Server actions and server-side mutations
-  app/                      Next.js App Router routes
+  actions/                  Authenticated server actions and domain operations
+  app/                      App Router pages, layouts, and route handlers
   components/
-    advisory/               Investment wizard components
-    auth/                   Auth UI helpers
-    dashboard/              Dashboard UI components
-    profile/                Financial profile components
+    advisory/               Robo-advisory wizard
+    auth/                   Authentication forms and controls
+    dashboard/              Dashboard cards, charts, and transaction UI
+    profile/                Financial profile and balance sheet forms
     ui/                     Shared UI primitives
-  lib/                      Utilities, validations, AI clients, math helpers
+  lib/                      Validation, market data, AI, and domain utilities
+  auth.ts                   Auth.js configuration
+  proxy.ts                  Protected-route authorization
 
 prisma/
-  schema.prisma             Database schema
-  seed.ts                   Demo user, transactions, balance sheet, fund universe
+  schema.prisma             PostgreSQL schema
+  seed.ts                   Demo data and curated mutual fund universe
 
 lib/
-  prisma.ts                 Prisma singleton
-  session.ts                Current-user helper
-  utils.ts                  Tailwind class merge helper
+  prisma.ts                 Development-safe Prisma singleton
+  session.ts                Authenticated-user helper
+  utils.ts                  Tailwind class composition helper
 ```
 
-## Prerequisites
+Server Components load dashboard data directly. Client Components are used only where interaction or browser state is required. Every user-owned database query is scoped by the authenticated `userId`.
+
+## Getting Started
+
+### Prerequisites
 
 - Node.js 22 or newer
-- PostgreSQL running locally or remotely
 - npm
+- PostgreSQL, locally or through a managed provider such as Neon
 
-## Environment Variables
-
-Create `.env` from `.env.example`:
+### 1. Install dependencies
 
 ```bash
-copy .env.example .env
+npm install
 ```
 
-On macOS/Linux:
+### 2. Configure the environment
+
+Copy the example environment file:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+On macOS or Linux:
 
 ```bash
 cp .env.example .env
 ```
 
-Required:
+Required variables:
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/pocketwise?schema=public"
 AUTH_SECRET="replace-with-a-strong-random-secret"
 ```
 
-Optional:
+Optional integrations:
 
 ```env
 GOOGLE_CLIENT_ID=""
@@ -108,202 +160,108 @@ GEMINI_API_KEY=""
 GEMINI_RECOMMENDATION_TIMEOUT_MS="15000"
 ```
 
-Notes:
-
-- `GEMINI_API_KEY` powers the investment recommendation engine and dashboard Insight Owl. If it is missing, the app uses safe fallbacks.
-- Do not expose secrets with `NEXT_PUBLIC_`.
-- If secrets were ever committed or shared, rotate them before deployment.
-
-Generate an Auth.js secret with:
+Generate a secure Auth.js secret with:
 
 ```bash
 npx auth secret
 ```
 
-## Installation
+Google OAuth must use this authorized redirect URI in Google Cloud:
 
-```bash
-npm install
+```text
+http://localhost:3000/api/auth/callback/google
 ```
 
-Generate Prisma Client:
+Use the corresponding HTTPS URL for production. For example:
+
+```text
+https://your-domain.com/api/auth/callback/google
+```
+
+### 3. Prepare the database
 
 ```bash
 npm run prisma:generate
-```
-
-Sync the database schema:
-
-```bash
 npx prisma db push
-```
-
-Seed demo data:
-
-```bash
 npm run prisma:seed
 ```
 
-## Running Locally
+### 4. Start the application
 
 ```bash
 npm run dev
 ```
 
-Open:
+Open [http://localhost:3000](http://localhost:3000).
+
+After seeding, use the demo account:
 
 ```text
-http://localhost:3000
-```
-
-Demo credentials after seeding:
-
-```text
-Email: demo@pocketwise.local
+Email:    demo@pocketwise.local
 Password: pocketwise-demo-2026
-```
-
-## Useful Commands
-
-```bash
-npm run dev
-npm run build
-npm run start
-npm run lint
-npx tsc --noEmit
-npm run prisma:generate
-npx prisma db push
-npm run prisma:seed
 ```
 
 ## Main Routes
 
-```text
-/                    Redirects to login or dashboard
-/login               Sign in
-/register            Create account
-/onboarding          Baseline setup gate
-/dashboard           Main money overview
-/dashboard/profile   Financial profile and balance sheet
-/dashboard/invest    Robo-advisory wizard
-```
+| Route | Purpose |
+| --- | --- |
+| `/` | Entry point; routes users to authentication or the dashboard |
+| `/login` | Email/password and Google sign-in |
+| `/register` | Account creation |
+| `/onboarding` | Initial financial baseline setup |
+| `/dashboard` | Monthly budget and activity overview |
+| `/dashboard/profile` | Personal profile and balance sheet management |
+| `/dashboard/invest` | Mutual fund advisory wizard |
 
 ## Financial Model
 
-Pocketwise keeps cash flow and wealth state separate.
+Pocketwise deliberately separates cash flow from wealth state.
 
-Daily cash flow:
+**Cash flow** is stored in `Transaction`. Quick Add records only income and expenses, which drive weekly spending and recent activity.
 
-- Stored in `Transaction`
-- Quick Add supports only `INCOME` and `EXPENSE`
-- Feeds weekly spending, latest entries, and left-to-spend calculations
-
-Wealth state:
-
-- Stored in `BalanceItem`, `UserProfile`, and `UserPortfolio`
-- Managed from `/dashboard/profile`
-- Feeds net worth, baseline budget, and advisory context
-
-Left to Spend:
+**Wealth state** is stored in `UserProfile`, `BalanceItem`, and `UserPortfolio`. Assets and liabilities are managed independently from daily transactions.
 
 ```text
-leftToSpend = (baselineMonthlyIncome - baselineMonthlyExpenses) - currentMonthExpenseTransactions
+monthlyBudget = baselineMonthlyIncome - baselineMonthlyExpenses
+
+leftToSpend = monthlyBudget - currentMonthExpenseTransactions
+
+netWorth = totalAssets - totalLiabilities
 ```
 
-Net Worth:
+Financial values use PostgreSQL decimals and `decimal.js` where exact arithmetic is required.
 
-```text
-netWorth = sum(assets) - sum(liabilities)
-```
+## Recommendation Pipeline
 
-## Investment Recommendation Flow
+The advisory workflow uses a multi-level retrieval and generation pipeline:
 
-The advisory wizard uses a multi-level RAG pipeline:
+1. Load the authenticated user's profile, balance sheet, and available monthly budget.
+2. Build a category-aware basket from the curated `MutualFund` table.
+3. Hydrate each candidate with its latest NAV from MFapi.in.
+4. Ask Gemini for exactly three funds under Core, Satellite, and Liquid Buffer guardrails.
+5. Validate the structured JSON response before returning it to the UI.
+6. Use a risk-aware deterministic allocation if Gemini or MFapi is unavailable.
 
-1. Read the authenticated user profile and balance sheet.
-2. Build a category-aware mutual fund basket:
-   - High risk: Small Cap, Mid Cap, Flexi Cap, Liquid
-   - Medium risk: Mid Cap, Flexi Cap, Large Cap / Index, Liquid
-   - Low risk: Large Cap / Index and Liquid
-3. Hydrate live NAVs through MFapi.
-4. Ask Gemini to select exactly 3 funds using Core / Satellite / Buffer guardrails.
-5. Fall back to a deterministic diversified allocation if Gemini or MFapi fails.
+## Scripts
 
-## Database Models
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the development server |
+| `npm run build` | Generate Prisma Client, sync the schema, and create a production build |
+| `npm run start` | Start the production server |
+| `npm run lint` | Run ESLint |
+| `npx tsc --noEmit` | Run TypeScript checks |
+| `npm run prisma:generate` | Generate Prisma Client |
+| `npm run prisma:migrate` | Create and apply a development migration |
+| `npm run prisma:seed` | Seed demo and mutual fund data |
 
-Key Prisma models:
+> `npm run build` executes `prisma db push`. Confirm that `DATABASE_URL` points to the intended database before running it.
 
-- `User`
-- `UserProfile`
-- `Transaction`
-- `BalanceItem`
-- `UserPortfolio`
-- `MutualFund`
-- Auth.js adapter models: `Account`, `Session`, `VerificationToken`
+## Production Deployment
 
-## Troubleshooting
+For Vercel, configure all required variables in the Production environment and redeploy after making changes. Never prefix database credentials, OAuth secrets, or AI keys with `NEXT_PUBLIC_`.
 
-### Gemini recommendations fall back
-
-Check the terminal for:
-
-```text
-[Gemini Portfolio Error]:
-[Gemini JSON Parse Error]:
-```
-
-Common causes:
-
-- Missing `GEMINI_API_KEY`
-- Network timeout
-- Invalid JSON response
-
-Increase the timeout if needed:
-
-```env
-GEMINI_RECOMMENDATION_TIMEOUT_MS="20000"
-```
-
-Restart the dev server after changing `.env`.
-
-### Google sign-in unavailable
-
-Google sign-in is only enabled when both are set:
-
-```env
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
-```
-
-The app still works with email/password auth if Google is not configured.
-
-### Prisma schema changes are not reflected
-
-Run:
-
-```bash
-npx prisma db push
-npm run prisma:generate
-```
-
-### Seeded funds are missing or stale
-
-Run:
-
-```bash
-npm run prisma:seed
-```
-
-The seed resets the curated mutual fund universe.
-
-## Production Checklist
-
-- Use a production PostgreSQL instance.
-- Set a strong `AUTH_SECRET`.
-- Rotate any secrets that were shared locally.
-- Configure OAuth redirect URLs for the production domain.
-- Set `GEMINI_API_KEY` only on the server environment.
-- Run:
+Before deployment, verify the application locally:
 
 ```bash
 npm run lint
@@ -311,7 +269,48 @@ npx tsc --noEmit
 npm run build
 ```
 
+Production checklist:
+
+- Use a managed PostgreSQL database with SSL enabled.
+- Generate a unique, strong `AUTH_SECRET`.
+- Add the exact production callback URL to the Google OAuth client.
+- Keep `GEMINI_API_KEY` server-side.
+- Rotate any credential that has been committed or shared.
+- Confirm that `.env` files are excluded from version control.
+
+## Troubleshooting
+
+### Google sign-in returns `Configuration`
+
+Verify `AUTH_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` in the deployment environment. Confirm that the OAuth client and secret belong together and that the callback URL exactly matches:
+
+```text
+https://your-domain.com/api/auth/callback/google
+```
+
+Auth.js logs configuration failures in the server or Vercel function logs under `[Auth.js Error]`.
+
+### Recommendations use the fallback allocation
+
+Check the server logs for `[Gemini Portfolio Error]` or `[Gemini JSON Parse Error]`. Typical causes are a missing API key, a network timeout, or an invalid model response. Increase `GEMINI_RECOMMENDATION_TIMEOUT_MS` when necessary and restart the server after changing `.env`.
+
+### Prisma changes do not appear
+
+```bash
+npx prisma db push
+npm run prisma:generate
+```
+
+Run `npm run prisma:seed` again when the curated mutual fund universe is missing or stale.
+
+## Security
+
+- Environment files and build artifacts are excluded through `.gitignore`.
+- AI and database credentials are read only by server-side modules.
+- Server actions authenticate every request before accessing user data.
+- Mutations and queries enforce ownership using the current user's ID.
+- Passwords are hashed with bcrypt and never stored in plain text.
+
 ## License
 
-This project is private and currently has no open-source license.
-# PocketWise
+This project is private and does not currently include an open-source license.
