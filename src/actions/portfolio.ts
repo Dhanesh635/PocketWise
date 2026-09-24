@@ -143,6 +143,19 @@ export async function calculatePortfolio(
     )
   ).filter((fund): fund is LiveFundData => fund !== null);
 
+  if (liveFunds.length < 3) {
+    console.error("[Portfolio Hydration Error]:", {
+      requiredFundCount: 3,
+      hydratedFundCount: liveFunds.length,
+      missingAmfiCodes: fundBasket
+        .filter(
+          (fund) =>
+            !liveFunds.some((liveFund) => liveFund.amfiCode === fund.amfiCode),
+        )
+        .map((fund) => fund.amfiCode),
+    });
+  }
+
   let geminiRecommendation: GeminiSipRecommendation | null = null;
 
   try {

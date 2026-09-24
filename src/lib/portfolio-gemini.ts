@@ -91,7 +91,16 @@ export async function generatePortfolioGemini(
 ): Promise<GeminiSipRecommendation | null> {
   const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!apiKey || input.funds.length === 0) {
+  if (!apiKey) {
+    console.error("[Gemini Portfolio Error]: GEMINI_API_KEY is not configured.");
+    return null;
+  }
+
+  if (input.funds.length < 3) {
+    console.error(
+      "[Gemini Portfolio Error]: At least 3 live fund candidates are required.",
+      { candidateCount: input.funds.length },
+    );
     return null;
   }
 

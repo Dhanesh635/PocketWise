@@ -24,28 +24,45 @@ export type LiveFundData = Readonly<{
   date: string;
 }>;
 
-function createTimeoutSignal(timeoutMs: number): AbortSignal {
-  const controller = new AbortController();
-  setTimeout(() => controller.abort(), timeoutMs);
-  return controller.signal;
+function getRequestTimeoutMs(): number {
+  const configuredTimeout = Number(process.env.MFAPI_REQUEST_TIMEOUT_MS);
+
+  return Number.isFinite(configuredTimeout) && configuredTimeout >= 3000
+    ? configuredTimeout
+    : 10000;
 }
 
 export async function getLiveFundData(
   amfiCode: string,
 ): Promise<LiveFundData | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    getRequestTimeoutMs(),
+  );
+
   try {
     const response = await fetch(`https://api.mfapi.in/mf/${amfiCode}`, {
-      signal: createTimeoutSignal(2500),
+      signal: controller.signal,
       next: { revalidate: 60 * 60 },
     });
 
     if (!response.ok) {
+      console.error("[MFapi Error]:", {
+        amfiCode,
+        status: response.status,
+        statusText: response.statusText,
+      });
       return null;
     }
 
     const parsedResponse = mfapiResponseSchema.safeParse(await response.json());
 
     if (!parsedResponse.success) {
+      console.error("[MFapi Response Error]:", {
+        amfiCode,
+        issues: parsedResponse.error.issues,
+      });
       return null;
     }
 
@@ -62,7 +79,10 @@ export async function getLiveFundData(
       latestNAV: new Decimal(latestNav.nav).toFixed(4),
       date: latestNav.date,
     };
-  } catch {
+  } catch (error) {
+    console.error("[MFapi Error]:", { amfiCode, error });
     return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
