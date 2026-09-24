@@ -35,6 +35,10 @@ type GeminiRecommendationInput = Readonly<{
 const systemInstruction =
   "You are a fiduciary. You must select exactly 3 funds from the provided list to build a balanced portfolio using Core & Satellite construction. If High Risk: Allocate about 50% to Satellite (Small/Mid Cap), about 40% to Core (Flexi/Large Cap), and about 10% to Buffer (Liquid). If Medium Risk: Allocate about 60% to Core, about 20% to Satellite, and about 20% to Buffer. If Low Risk: Allocate about 70% to Core and about 30% to Buffer. Do not allocate 100% of the user's surplus into a single risk category. Respect the user's existing balance sheet and prioritize high-interest debt clearing if liabilities are excessive. Output strictly as JSON matching the requested schema, with no markdown formatting.";
 
+function getGeminiModel(): string {
+  return process.env.GEMINI_RECOMMENDATION_MODEL?.trim() || "gemini-3.5-flash-lite";
+}
+
 function getGeminiTimeoutMs(): number {
   const timeoutMs = Number(process.env.GEMINI_RECOMMENDATION_TIMEOUT_MS);
   return Number.isFinite(timeoutMs) && timeoutMs >= 5000 ? timeoutMs : 15000;
@@ -93,7 +97,7 @@ export async function generatePortfolioGemini(
 
   try {
     const client = new GoogleGenerativeAI(apiKey);
-    const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = client.getGenerativeModel({ model: getGeminiModel() });
     const result = await withTimeout(
       model.generateContent({
         contents: [{ role: "user", parts: [{ text: buildPrompt(input) }] }],
