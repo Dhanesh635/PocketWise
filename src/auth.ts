@@ -6,6 +6,7 @@ import { compare } from "bcryptjs";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
+import authConfig from "@/src/auth.config";
 
 const credentialsSchema = z.object({
   email: z.string().trim().email().toLowerCase(),
@@ -47,14 +48,11 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
   },
-  pages: {
-    signIn: "/login",
-  },
-  trustHost: true,
   providers: [
     ...getGoogleProvider(),
     Credentials({
@@ -102,22 +100,6 @@ export const {
       },
     }),
   ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user?.id) {
-        token.id = user.id;
-      }
-
-      return token;
-    },
-    session({ session, token }) {
-      if (session.user && typeof token.id === "string") {
-        session.user.id = token.id;
-      }
-
-      return session;
-    },
-  },
   logger: {
     error(error) {
       console.error("[Auth.js Error]:", error);
