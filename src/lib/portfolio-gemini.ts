@@ -41,7 +41,7 @@ function getGeminiModel(): string {
 
 function getGeminiTimeoutMs(): number {
   const timeoutMs = Number(process.env.GEMINI_RECOMMENDATION_TIMEOUT_MS);
-  return Number.isFinite(timeoutMs) && timeoutMs >= 5000 ? timeoutMs : 15000;
+  return Number.isFinite(timeoutMs) && timeoutMs >= 5000 ? timeoutMs : 30000;
 }
 
 function buildPrompt(input: GeminiRecommendationInput): string {
@@ -67,25 +67,6 @@ function buildPrompt(input: GeminiRecommendationInput): string {
   ].join("\n");
 }
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-  const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(
-      () => reject(new Error("Gemini portfolio request timed out.")),
-      timeoutMs,
-    );
-  });
-
-  try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  }
-}
-
 export async function generatePortfolioGemini(
   input: GeminiRecommendationInput,
 ): Promise<GeminiSipRecommendation | null> {
@@ -107,12 +88,16 @@ export async function generatePortfolioGemini(
   try {
     const client = new GoogleGenerativeAI(apiKey);
     const model = client.getGenerativeModel({ model: getGeminiModel() });
-    const result = await withTimeout(
-      model.generateContent({
+    const result = await model.generateContent(
+      {
         contents: [{ role: "user", parts: [{ text: buildPrompt(input) }] }],
-        generationConfig: { responseMimeType: "application/json" },
-      }),
-      getGeminiTimeoutMs(),
+        generationConfig: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 1024,
+          temperature: 0.2,
+        },
+      },
+      { timeout: getGeminiTimeoutMs() },
     );
 
     const content = result.response.text();
